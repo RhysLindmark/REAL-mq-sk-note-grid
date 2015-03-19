@@ -97,8 +97,8 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
             labelPosition += stepSize;
         }
         
-        int spriteSize = 50;
-        int numberOfSprites = 500;
+        int spriteSize = 20;
+        int numberOfSprites = 50;
         CGPathRef path = CGPathCreateWithRoundedRect(CGRectMake(-15, -15, 30, 30), 4, 4, nil);
         for (int i = 0; i < numberOfSprites; i++)
         {
@@ -113,7 +113,7 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
                 
                 
                 [greenTestSprite setName:@"greenTestSprite"];
-                [greenTestSprite setPosition:(CGPoint){.x = i * spriteSize, .y = j * spriteSize + 1}];
+                [greenTestSprite setPosition:(CGPoint){.x = i * spriteSize * 2, .y = j * spriteSize * 2}];
                 [spriteForScrollingGeometry addChild:effectNode];
             }
             
@@ -163,6 +163,36 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
     [greenTestSprite setName:@"greenTestSprite"];
     [greenTestSprite setPosition:point];
     [self.spriteForScrollingGeometry addChild:effectNode];
+    
+    [NSTimer scheduledTimerWithTimeInterval:.25 target:self selector:@selector(scrollMe) userInfo:nil repeats:YES];
+}
+
+- (void)scrollMe
+{
+    CGPoint contentOffset = (CGPoint){_contentOffset.x + 20, _contentOffset.y};
+    _contentOffset = contentOffset;
+    contentOffset.x *= -1;
+    [self.spriteToScroll runAction:[SKAction moveTo:contentOffset duration:.25]];
+//    [self.spriteToScroll setPosition:contentOffset];
+    
+    CGPoint scrollingLowerLeft = [self.spriteForScrollingGeometry convertPoint:(CGPoint){0,0} toNode:self.spriteToHostHorizontalAndVerticalScrolling];
+    
+    CGPoint horizontalScrollingPosition = [self.spriteForHorizontalScrolling position];
+    horizontalScrollingPosition.y = scrollingLowerLeft.y;
+    
+    
+    [self.spriteForHorizontalScrolling runAction:[SKAction moveTo:horizontalScrollingPosition duration:.25]];
+//    [self.spriteForHorizontalScrolling setPosition:horizontalScrollingPosition];
+    
+    CGPoint verticalScrollingPosition = [self.spriteForVerticalScrolling position];
+    verticalScrollingPosition.x = scrollingLowerLeft.x;
+    [self.spriteForVerticalScrolling runAction:[SKAction moveTo:verticalScrollingPosition duration:.25]];
+//    [self.spriteForVerticalScrolling setPosition:verticalScrollingPosition];
+    
+    
+    
+    
+
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
@@ -220,6 +250,7 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
 
     CGPoint horizontalScrollingPosition = [self.spriteForHorizontalScrolling position];
     horizontalScrollingPosition.y = scrollingLowerLeft.y;
+
     [self.spriteForHorizontalScrolling setPosition:horizontalScrollingPosition];
 
     CGPoint verticalScrollingPosition = [self.spriteForVerticalScrolling position];
