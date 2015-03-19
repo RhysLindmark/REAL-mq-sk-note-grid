@@ -98,7 +98,7 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
         }
         
         int spriteSize = 50;
-        int numberOfSprites = 10;
+        int numberOfSprites = 50;
         CGPathRef path = CGPathCreateWithRoundedRect(CGRectMake(-15, -15, 30, 30), 4, 4, nil);
         for (int i = 0; i < numberOfSprites; i++)
         {
