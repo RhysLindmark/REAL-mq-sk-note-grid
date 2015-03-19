@@ -164,15 +164,16 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
     [greenTestSprite setPosition:point];
     [self.spriteForScrollingGeometry addChild:effectNode];
     
+//    [self scrollMeBy:1000 duringTime:20];
     [NSTimer scheduledTimerWithTimeInterval:.25 target:self selector:@selector(scrollMe) userInfo:nil repeats:YES];
 }
 
-- (void)scrollMe
+- (void)scrollMeBy:(int)scrollAmount duringTime:(NSTimeInterval)time
 {
-    CGPoint contentOffset = (CGPoint){_contentOffset.x + 20, _contentOffset.y};
+    CGPoint contentOffset = (CGPoint){_contentOffset.x + scrollAmount, _contentOffset.y};
     _contentOffset = contentOffset;
     contentOffset.x *= -1;
-    [self.spriteToScroll runAction:[SKAction moveTo:contentOffset duration:.25]];
+    [self.spriteToScroll runAction:[SKAction moveTo:contentOffset duration:time]];
 //    [self.spriteToScroll setPosition:contentOffset];
     
     CGPoint scrollingLowerLeft = [self.spriteForScrollingGeometry convertPoint:(CGPoint){0,0} toNode:self.spriteToHostHorizontalAndVerticalScrolling];
@@ -181,18 +182,23 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
     horizontalScrollingPosition.y = scrollingLowerLeft.y;
     
     
-    [self.spriteForHorizontalScrolling runAction:[SKAction moveTo:horizontalScrollingPosition duration:.25]];
+    [self.spriteForHorizontalScrolling runAction:[SKAction moveTo:horizontalScrollingPosition duration:time]];
 //    [self.spriteForHorizontalScrolling setPosition:horizontalScrollingPosition];
     
     CGPoint verticalScrollingPosition = [self.spriteForVerticalScrolling position];
     verticalScrollingPosition.x = scrollingLowerLeft.x;
-    [self.spriteForVerticalScrolling runAction:[SKAction moveTo:verticalScrollingPosition duration:.25]];
+    [self.spriteForVerticalScrolling runAction:[SKAction moveTo:verticalScrollingPosition duration:time]];
 //    [self.spriteForVerticalScrolling setPosition:verticalScrollingPosition];
     
     
     
     
 
+}
+
+- (void)scrollMe
+{
+    [self scrollMeBy:20 duringTime:.25];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
