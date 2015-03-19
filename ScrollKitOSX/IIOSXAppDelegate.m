@@ -47,6 +47,7 @@ const CGFloat multiplier = 1.5;
 
     [skView presentScene:scene];
 
+    skView.showsDrawCount = YES;
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
 

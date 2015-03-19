@@ -25,10 +25,15 @@ static NSString * kViewTransformChanged = @"view transform changed";
 
     // Configure the view.
     SKView * skView = (SKView *)self.view;
+    skView.showsDrawCount = YES;
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
 
     // Create and configure the scene.
+    CGSize contentSize = skView.frame.size;
+    contentSize.height *= 15;
+    contentSize.width *= 15;
+
     IIMyScene *scene = [IIMyScene sceneWithSize:skView.bounds.size];
     scene.scaleMode = SKSceneScaleModeFill;
 
@@ -36,17 +41,16 @@ static NSString * kViewTransformChanged = @"view transform changed";
     [skView presentScene:scene];
     _scene = scene;
 
-    CGSize contentSize = skView.frame.size;
-    contentSize.height *= 1.5;
-    contentSize.width *= 1.5;
+
     [scene setContentSize:contentSize];
 
     UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:skView.frame];
     [scrollView setContentSize:contentSize];
+//    scrollView.panGestureRecognizer.minimumNumberOfTouches = 2;
 
     scrollView.delegate = self;
-    [scrollView setMinimumZoomScale:1.0];
-    [scrollView setMaximumZoomScale:3.0];
+//    [scrollView setMinimumZoomScale:1.0];
+//    [scrollView setMaximumZoomScale:3.0];
     [scrollView setIndicatorStyle:UIScrollViewIndicatorStyleWhite];
     UIView *clearContentView = [[UIView alloc] initWithFrame:(CGRect){.origin = CGPointZero, .size = contentSize}];
     [clearContentView setBackgroundColor:[UIColor clearColor]];
@@ -59,6 +63,15 @@ static NSString * kViewTransformChanged = @"view transform changed";
                           options:NSKeyValueObservingOptionNew
                           context:&kViewTransformChanged];
     [skView addSubview:scrollView];
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tap:)];
+    [skView addGestureRecognizer:tap];
+}
+
+- (void)tap:(UITapGestureRecognizer *)tapGesture
+{
+    CGPoint point = [tapGesture locationInView:_clearContentView];
+    [self.scene handleTapAtPoint:point];
 }
 
 -(void)adjustContent:(UIScrollView *)scrollView
@@ -66,6 +79,7 @@ static NSString * kViewTransformChanged = @"view transform changed";
     CGFloat zoomScale = [scrollView zoomScale];
     [self.scene setContentScale:zoomScale];
     CGPoint contentOffset = [scrollView contentOffset];
+    NSLog(@"%@", NSStringFromCGPoint(contentOffset));
     [self.scene setContentOffset:contentOffset];
 }
 
@@ -88,6 +102,12 @@ static NSString * kViewTransformChanged = @"view transform changed";
 {
     [self adjustContent:scrollView];
 }
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    NSLog(@"began");
+}
+
 #pragma mark - KVO
 
 -(void)observeValueForKeyPath:(NSString *)keyPath

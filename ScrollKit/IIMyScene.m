@@ -96,31 +96,46 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
             [spriteForVerticalScrolling addChild:scrollingLabel];
             labelPosition += stepSize;
         }
-
-        //Test sprites for scrolling and zooming
-        SKSpriteNode *greenTestSprite = [SKSpriteNode spriteNodeWithColor:[SKColor greenColor]
-                                                                     size:(CGSize){.width = size.width,
-                                                                         .height = size.height*.25}];
-        [greenTestSprite setName:@"greenTestSprite"];
-        [greenTestSprite setAnchorPoint:(CGPoint){0,0}];
-        [spriteForScrollingGeometry addChild:greenTestSprite];
-
-        SKSpriteNode *blueTestSprite = [SKSpriteNode spriteNodeWithColor:[SKColor blueColor]
-                                                                    size:(CGSize){.width = size.width*.25,
-                                                                        .height = size.height*.25}];
-        [blueTestSprite setName:@"blueTestSprite"];
-        [blueTestSprite setAnchorPoint:(CGPoint){0,0}];
-        [blueTestSprite setPosition:(CGPoint){.x = size.width * .25, .y = size.height *.65}];
-        [spriteForScrollingGeometry addChild:blueTestSprite];
-
-        //Test sprites for stationary sprites
-        SKLabelNode *stationaryLabel = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue"];
-        [stationaryLabel setText:@"I'm not gonna move, nope, nope."];
-        [stationaryLabel setFontSize:14.0];
-        [stationaryLabel setFontColor:[SKColor darkGrayColor]];
-        [stationaryLabel setPosition:(CGPoint){.x = 60.0, .y = 60.0}];
-        [stationaryLabel setHorizontalAlignmentMode:SKLabelHorizontalAlignmentModeLeft];
-        [spriteForStaticGeometry addChild:stationaryLabel];
+        
+        int spriteSize = 50;
+        int numberOfSprites = 10;
+        CGPathRef path = CGPathCreateWithRoundedRect(CGRectMake(-15, -15, 30, 30), 4, 4, nil);
+        for (int i = 0; i < numberOfSprites; i++)
+        {
+            for (int j = 0; j < numberOfSprites; j++)
+            {
+                //Test sprites for scrolling and zooming
+                SKEffectNode *effectNode = [[SKEffectNode alloc] init];
+                SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, spriteSize, spriteSize) cornerRadius:3];
+                [greenTestSprite setFillColor:[UIColor redColor]];
+                [effectNode addChild:greenTestSprite];
+                effectNode.shouldRasterize = YES;
+                
+                
+                [greenTestSprite setName:@"greenTestSprite"];
+                [greenTestSprite setPosition:(CGPoint){.x = i * spriteSize, .y = j * spriteSize + 1}];
+                [spriteForScrollingGeometry addChild:effectNode];
+            }
+            
+            
+            SKSpriteNode *blueTestSprite = [SKSpriteNode spriteNodeWithColor:[SKColor blueColor]
+                                                                        size:(CGSize){.width = size.width*.25,
+                                                                            .height = size.height*.25}];
+            [blueTestSprite setName:@"blueTestSprite"];
+            [blueTestSprite setAnchorPoint:(CGPoint){0,0}];
+            [blueTestSprite setPosition:(CGPoint){.x = size.width * .25 + i * 25, .y = size.height *.65 + i * 25}];
+            [spriteForScrollingGeometry addChild:blueTestSprite];
+            
+            //Test sprites for stationary sprites
+            SKLabelNode *stationaryLabel = [SKLabelNode labelNodeWithFontNamed:@"HelveticaNeue"];
+            [stationaryLabel setText:@"I'm not gonna move, nope, nope."];
+            [stationaryLabel setFontSize:14.0];
+            [stationaryLabel setFontColor:[SKColor darkGrayColor]];
+            [stationaryLabel setPosition:(CGPoint){.x = 60.0 + i, .y = 60.0 + i}];
+            [stationaryLabel setHorizontalAlignmentMode:SKLabelHorizontalAlignmentModeLeft];
+            [spriteForStaticGeometry addChild:stationaryLabel];
+        }
+        
 
         //Set properties
         _contentSize = size;
@@ -133,6 +148,41 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
         _contentOffset = (CGPoint){0,0};
     }
     return self;
+}
+
+- (void)handleTapAtPoint:(CGPoint)point
+{
+    point = CGPointMake(point.x, _contentSize.height - point.y);
+    NSLog(@"%@", NSStringFromCGPoint(point));
+    SKEffectNode *effectNode = [[SKEffectNode alloc] init];
+    SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, 100, 100) cornerRadius:25];
+    [greenTestSprite setFillColor:[UIColor redColor]];
+    [effectNode addChild:greenTestSprite];
+    effectNode.shouldRasterize = YES;
+    
+    [greenTestSprite setName:@"greenTestSprite"];
+    [greenTestSprite setPosition:point];
+    [self.spriteForScrollingGeometry addChild:effectNode];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    
+}
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    CGPoint touchPoint = [[touches anyObject] locationInNode:self.spriteForScrollingGeometry];
+
+    SKEffectNode *effectNode = [[SKEffectNode alloc] init];
+    SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, 100, 100) cornerRadius:25];
+    [greenTestSprite setFillColor:[UIColor redColor]];
+    [effectNode addChild:greenTestSprite];
+    effectNode.shouldRasterize = YES;
+    
+    [greenTestSprite setName:@"greenTestSprite"];
+    [greenTestSprite setPosition:touchPoint];
+    [self.spriteForScrollingGeometry addChild:effectNode];
 }
 
 -(void)didChangeSize:(CGSize)oldSize
@@ -216,5 +266,7 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
 
     [self setContentOffset:self.contentOffset];
 }
+
+
 
 @end
