@@ -164,8 +164,34 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
     [greenTestSprite setPosition:point];
     [self.spriteForScrollingGeometry addChild:effectNode];
     
+    //[self makeABunchOfNotesAtPoint:point];
+    
 //    [self scrollMeBy:1000 duringTime:20];
     [NSTimer scheduledTimerWithTimeInterval:.25 target:self selector:@selector(scrollMe) userInfo:nil repeats:YES];
+}
+
+- (void)makeABunchOfNotesAtPoint:(CGPoint)point
+{
+    int spriteSize = 20;
+    int numberOfSprites = 10;
+    CGPathRef path = CGPathCreateWithRoundedRect(CGRectMake(-15, -15, 30, 30), 4, 4, nil);
+    for (int i = 0; i < numberOfSprites; i++)
+    {
+        for (int j = 0; j < numberOfSprites; j++)
+        {
+            //Test sprites for scrolling and zooming
+            SKEffectNode *effectNode = [[SKEffectNode alloc] init];
+            SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, spriteSize, spriteSize) cornerRadius:3];
+            [greenTestSprite setFillColor:[UIColor redColor]];
+            [effectNode addChild:greenTestSprite];
+            effectNode.shouldRasterize = YES;
+            
+            
+            [greenTestSprite setName:@"greenTestSprite"];
+            [greenTestSprite setPosition:(CGPoint){.x = point.x + i * spriteSize * 2, .y = point.y + j * spriteSize * 2}];
+            [self.spriteForScrollingGeometry addChild:effectNode];
+        }
+    }
 }
 
 - (void)scrollMeBy:(int)scrollAmount duringTime:(NSTimeInterval)time
