@@ -18,6 +18,8 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
 //kIIMySceneZPositionScrolling
 @property (nonatomic, weak) SKSpriteNode *spriteToScroll;
 @property (nonatomic, weak) SKSpriteNode *spriteForScrollingGeometry;
+@property (nonatomic, strong) SKEffectNode *spriteForTopScrollingGeometry;
+@property (nonatomic, strong) SKEffectNode *spriteForBottomScrollingGeometry;
 
 //kIIMySceneZPositionStatic
 @property (nonatomic, weak) SKSpriteNode *spriteForStaticGeometry;
@@ -29,6 +31,9 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
 @end
 
 @implementation IIMyScene
+{
+    BOOL _blurSwitch;
+}
 
 -(id)initWithSize:(CGSize)size {
     if (self = [super initWithSize:size]) {
@@ -44,6 +49,13 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
         [spriteForScrollingGeometry setAnchorPoint:(CGPoint){0,0}];
         [spriteForScrollingGeometry setPosition:(CGPoint){0, -size.height}];
         [spriteToScroll addChild:spriteForScrollingGeometry];
+        
+        _spriteForBottomScrollingGeometry = [self createBlurNode];
+        [spriteForScrollingGeometry addChild:_spriteForBottomScrollingGeometry];
+        [_spriteForBottomScrollingGeometry setShouldEnableEffects:YES];
+        
+        _spriteForTopScrollingGeometry = [self createBlurNode];
+        [spriteForScrollingGeometry addChild:_spriteForTopScrollingGeometry];
 
         SKSpriteNode *spriteForStaticGeometry = [SKSpriteNode spriteNodeWithColor:[SKColor clearColor] size:size];
         [spriteForStaticGeometry setAnchorPoint:(CGPoint){0,0}];
@@ -97,26 +109,25 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
             labelPosition += stepSize;
         }
         
-        int spriteSize = 20;
-        int numberOfSprites = 50;
-        CGPathRef path = CGPathCreateWithRoundedRect(CGRectMake(-15, -15, 30, 30), 4, 4, nil);
+        int spriteSize = 50;
+        int numberOfSprites = 15;
         for (int i = 0; i < numberOfSprites; i++)
         {
             for (int j = 0; j < numberOfSprites; j++)
             {
                 //Test sprites for scrolling and zooming
                 SKEffectNode *effectNode = [[SKEffectNode alloc] init];
-                SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, spriteSize, spriteSize) cornerRadius:3];
-                [greenTestSprite setFillColor:[UIColor redColor]];
-                [effectNode addChild:greenTestSprite];
                 effectNode.shouldRasterize = YES;
-                
-                
-                [greenTestSprite setName:@"greenTestSprite"];
-                [greenTestSprite setPosition:(CGPoint){.x = i * spriteSize * 2, .y = j * spriteSize * 2}];
-                [spriteForScrollingGeometry addChild:effectNode];
+                SKShapeNode *colorShapeSprite =
+                    [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, spriteSize, spriteSize) cornerRadius:3];
+
+                [colorShapeSprite setFillColor:[UIColor redColor]];
+                [colorShapeSprite setName:@"colorShapeSprite"];
+                [colorShapeSprite setPosition:(CGPoint){.x = i * spriteSize * 2, .y = j * spriteSize * 2}];
+
+                [effectNode addChild:colorShapeSprite];
+                [_spriteForBottomScrollingGeometry addChild:effectNode];
             }
-            
             
             SKSpriteNode *blueTestSprite = [SKSpriteNode spriteNodeWithColor:[SKColor blueColor]
                                                                         size:(CGSize){.width = size.width*.25,
@@ -136,7 +147,6 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
             [spriteForStaticGeometry addChild:stationaryLabel];
         }
         
-
         //Set properties
         _contentSize = size;
         _spriteToScroll = spriteToScroll;
@@ -147,27 +157,77 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
         _spriteForHorizontalScrolling = spriteForHorizontalScrolling;
         _contentOffset = (CGPoint){0,0};
     }
+    
     return self;
+}
+
+- (SKEffectNode *)createBlurNode
+{
+    SKEffectNode *blurNode = [[SKEffectNode alloc] init];
+    blurNode.shouldRasterize = YES;
+    [blurNode setShouldEnableEffects:NO];
+
+    [blurNode setFilter:[CIFilter filterWithName:@"CIGaussianBlur"
+                                   keysAndValues:@"inputRadius", @10.0f, nil]];
+    return blurNode;
 }
 
 - (void)handleTapAtPoint:(CGPoint)point
 {
     point = CGPointMake(point.x, _contentSize.height - point.y);
     NSLog(@"%@", NSStringFromCGPoint(point));
-    SKEffectNode *effectNode = [[SKEffectNode alloc] init];
-    SKShapeNode *greenTestSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, 100, 100) cornerRadius:25];
-    [greenTestSprite setFillColor:[UIColor redColor]];
-    [effectNode addChild:greenTestSprite];
-    effectNode.shouldRasterize = YES;
     
-    [greenTestSprite setName:@"greenTestSprite"];
-    [greenTestSprite setPosition:point];
-    [self.spriteForScrollingGeometry addChild:effectNode];
+    SKShapeNode *colorShapeSprite = [SKShapeNode shapeNodeWithRect:CGRectMake(0, 0, 200, 100) cornerRadius:25];
+    [colorShapeSprite setFillColor:[UIColor greenColor]];
+    [colorShapeSprite setName:@"colorShapeSprite"];
+    
+    [_spriteForTopScrollingGeometry addChild:colorShapeSprite];
+    colorShapeSprite.position = point;
+    
+    _blurSwitch = ! _blurSwitch;
+
+    [self switchBlur:_blurSwitch forNode:_spriteForTopScrollingGeometry];
+    [self switchBlur:! _blurSwitch forNode:_spriteForBottomScrollingGeometry];
     
     //[self makeABunchOfNotesAtPoint:point];
     
 //    [self scrollMeBy:1000 duringTime:20];
-    [NSTimer scheduledTimerWithTimeInterval:.25 target:self selector:@selector(scrollMe) userInfo:nil repeats:YES];
+//    [NSTimer scheduledTimerWithTimeInterval:.25 target:self selector:@selector(scrollMe) userInfo:nil repeats:YES];
+}
+
+- (void)switchBlur:(BOOL)blur forNode:(SKEffectNode *)node
+{
+    [node setShouldEnableEffects:blur];
+    node.zPosition = ! blur;
+    
+    if (! blur)
+    {
+        return;
+    }
+    
+    node.shouldRasterize = NO;
+    
+    __block CGFloat lastElapsedTime = 0;
+    SKAction *animationAction =
+        [SKAction customActionWithDuration:0.5
+                               actionBlock:^(SKNode *node, CGFloat elapsedTime)
+    {
+        if (elapsedTime - lastElapsedTime < 0.1)
+        {
+            return;
+        }
+        
+        lastElapsedTime = elapsedTime;
+        
+        NSNumber *radius = [NSNumber numberWithFloat:elapsedTime * 20];
+        NSLog(@"elapsed time = %f | radius = %f", elapsedTime, [radius floatValue]);
+        [[(SKEffectNode *)node filter] setValue:radius forKey:@"inputRadius"];
+    }];
+    
+    [node runAction:animationAction completion:^
+    {
+        node.shouldRasterize = YES;
+    }];
 }
 
 - (void)makeABunchOfNotesAtPoint:(CGPoint)point
@@ -215,11 +275,6 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
     verticalScrollingPosition.x = scrollingLowerLeft.x;
     [self.spriteForVerticalScrolling runAction:[SKAction moveTo:verticalScrollingPosition duration:time]];
 //    [self.spriteForVerticalScrolling setPosition:verticalScrollingPosition];
-    
-    
-    
-    
-
 }
 
 - (void)scrollMe
@@ -329,7 +384,5 @@ typedef NS_ENUM(NSInteger, IIMySceneZPosition)
 
     [self setContentOffset:self.contentOffset];
 }
-
-
 
 @end

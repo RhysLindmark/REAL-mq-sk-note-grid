@@ -62,10 +62,13 @@ static NSString * kViewTransformChanged = @"view transform changed";
                        forKeyPath:@"transform"
                           options:NSKeyValueObservingOptionNew
                           context:&kViewTransformChanged];
+    
     [skView addSubview:scrollView];
     
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tap:)];
     [skView addGestureRecognizer:tap];
+    
+    [scrollView setContentOffset:CGPointMake(0, contentSize.height - scrollView.frame.size.height)];
 }
 
 - (void)tap:(UITapGestureRecognizer *)tapGesture
